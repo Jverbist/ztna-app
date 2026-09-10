@@ -75,7 +75,12 @@ nano .env
 
 Set `FORTIGATE_HOST=10.60.10.1` and paste the API token into `FORTIGATE_TOKEN`.
 Leave `FORTIGATE_VERIFY_TLS=false` unless you've installed a trusted cert on
-the FortiGate's admin GUI.
+the FortiGate's admin GUI. Double check `FORTIGATE_PORT` — some labs move the
+admin HTTPS port off the default `443` (this lab uses `10443`).
+
+> If the backend can't reach the FortiGate (see `docker compose logs
+> fastapi`), see [NETWORK_SETUP.md](./NETWORK_SETUP.md) for routing/firewall
+> troubleshooting steps specific to this CloudShare lab topology.
 
 ## 5. Generate the local self-signed TLS certificate
 
