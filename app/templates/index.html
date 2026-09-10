@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ZTNA Demonstration Dashboard</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1>Fortinet ZTNA Demonstration Dashboard</h1>
+    <span id="status-indicator" class="status-indicator" title="FortiGate connection status">●</span>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="system">System Health</button>
+    <button class="tab-btn" data-tab="ztna">ZTNA</button>
+  </nav>
+
+  <main>
+    <section id="tab-system" class="tab-panel active">
+      <div class="cards">
+        <div class="card">
+          <h2>System Status</h2>
+          <table id="system-status-table"><tbody></tbody></table>
+        </div>
+        <div class="card">
+          <h2>CPU / Memory Usage</h2>
+          <div id="resource-usage"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Interfaces</h2>
+        <table id="interfaces-table">
+          <thead>
+            <tr><th>Name</th><th>IP</th><th>Status</th><th>RX (bytes)</th><th>TX (bytes)</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h2>Active Sessions</h2>
+        <table id="sessions-table">
+          <thead>
+            <tr><th>Source</th><th>Destination</th><th>Proto</th><th>Policy</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="tab-ztna" class="tab-panel">
+      <div class="card">
+        <h2>ZTNA Firewall Policies</h2>
+        <table id="ztna-policies-table">
+          <thead>
+            <tr><th>ID</th><th>Name</th><th>ZTNA EMS Tag</th><th>Status</th><th>Action</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h2>ZTNA Tag Groups (from FortiClient EMS)</h2>
+        <table id="ztna-tags-table">
+          <thead>
+            <tr><th>Name</th><th>Member Tags</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h2>ZTNA Traffic Forward Proxy</h2>
+        <table id="ztna-tfp-table">
+          <thead>
+            <tr><th>Name</th><th>Host</th><th>Port</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <small>Polling FortiGate REST API every <span id="poll-interval">10</span>s</small>
+  </footer>
+
+  <script src="/static/js/dashboard.js"></script>
+</body>
+</html>
