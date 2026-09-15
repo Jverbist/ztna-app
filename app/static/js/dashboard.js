@@ -24,6 +24,42 @@ async function fetchJSON(url) {
   return resp.json();
 }
 
+function isUnavailable(data) {
+  return data.error && [400, 404].includes(data.status);
+}
+
+function errorMessage(data, feature) {
+  if (isUnavailable(data)) {
+    return `${feature} is not available through this FortiOS API (${data.status})`;
+  }
+  return "Error reaching FortiGate";
+}
+
+function latestMetric(metric) {
+  if (Array.isArray(metric)) return metric.at(-1);
+  return metric;
+}
+
+function percentage(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? `${number}%` : "n/a";
+}
+
+function resourceValue(metric, names) {
+  if (typeof metric === "number") return metric;
+  if (!metric || typeof metric !== "object") return undefined;
+  for (const name of names) {
+    if (metric[name] !== undefined) return metric[name];
+  }
+  return undefined;
+}
+
+function interfaceIp(ip) {
+  if (Array.isArray(ip)) return ip.join(", ") || "-";
+  if (typeof ip === "string") return ip || "-";
+  return "-";
+}
+
 function setStatus(ok) {
   const el = document.getElementById("status-indicator");
   el.classList.remove("ok", "error");
@@ -85,11 +121,13 @@ async function loadResourceUsage() {
     return;
   }
   const results = data.results || {};
-  const cpu = results.cpu ? results.cpu[results.cpu.length - 1] : null;
-  const mem = results.mem ? results.mem[results.mem.length - 1] : null;
+  const cpu = latestMetric(results.cpu);
+  const mem = latestMetric(results.mem);
+  const cpuValue = resourceValue(cpu, ["cpu", "cpu_usage", "cpu_user"]);
+  const memoryValue = resourceValue(mem, ["mem", "memory", "memory_usage"]);
   el.innerHTML = `
-    <p>CPU: <strong>${cpu ? cpu.cpu_user + cpu.cpu_system + "%" : "n/a"}</strong></p>
-    <p>Memory: <strong>${mem ? mem.mem + "%" : "n/a"}</strong></p>
+    <p>CPU: <strong>${percentage(cpuValue)}</strong></p>
+    <p>Memory: <strong>${percentage(memoryValue)}</strong></p>
   `;
 }
 
@@ -106,7 +144,7 @@ async function loadInterfaces() {
     const status = iface.link ? "up" : "down";
     tbody.innerHTML += `<tr>
       <td>${iface.name || "-"}</td>
-      <td>${(iface.ip && iface.ip[0]) || "-"}</td>
+      <td>${interfaceIp(iface.ip)}</td>
       <td><span class="badge ${status}">${status}</span></td>
       <td>${iface.rx_bytes ?? "-"}</td>
       <td>${iface.tx_bytes ?? "-"}</td>
@@ -119,7 +157,7 @@ async function loadSessions() {
   const tbody = document.querySelector("#sessions-table tbody");
   tbody.innerHTML = "";
   if (data.error) {
-    tbody.innerHTML = `<tr><td colspan="4">Error reaching FortiGate</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="4">${errorMessage(data, "Active-session data")}</td></tr>`;
     return;
   }
   const results = data.results || [];
@@ -138,7 +176,7 @@ async function loadZtnaPolicies() {
   const tbody = document.querySelector("#ztna-policies-table tbody");
   tbody.innerHTML = "";
   if (data.error) {
-    tbody.innerHTML = `<tr><td colspan="5">Error reaching FortiGate</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5">${errorMessage(data, "ZTNA firewall-policy data")}</td></tr>`;
     return;
   }
   const results = data.results || [];
@@ -162,7 +200,7 @@ async function loadZtnaTags() {
   const tbody = document.querySelector("#ztna-tags-table tbody");
   tbody.innerHTML = "";
   if (data.error) {
-    tbody.innerHTML = `<tr><td colspan="2">Error reaching FortiGate (feature may not be licensed/configured)</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="2">${errorMessage(data, "ZTNA EMS tag data")}</td></tr>`;
     return;
   }
   const results = data.results || [];
@@ -181,7 +219,7 @@ async function loadZtnaTrafficForwardProxy() {
   const tbody = document.querySelector("#ztna-tfp-table tbody");
   tbody.innerHTML = "";
   if (data.error) {
-    tbody.innerHTML = `<tr><td colspan="3">Error reaching FortiGate (feature may not be configured)</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="3">${errorMessage(data, "ZTNA traffic-forward-proxy data")}</td></tr>`;
     return;
   }
   const results = data.results || [];

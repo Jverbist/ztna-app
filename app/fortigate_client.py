@@ -46,6 +46,16 @@ class FortiGateClient:
             logger.error("FortiGate API request failed for %s: %s", path, exc)
             return {"error": True, "status": None, "path": path, "message": str(exc)}
 
+    async def _get_first_available(self, paths: list[str]) -> dict[str, Any]:
+        """Try endpoint aliases used by different FortiOS releases."""
+        last_result: dict[str, Any] = {}
+        for path in paths:
+            result = await self._get(path)
+            if not result.get("error"):
+                return result
+            last_result = result
+        return last_result
+
     # ---- System health ----------------------------------------------------
 
     async def system_status(self) -> dict[str, Any]:
@@ -72,7 +82,12 @@ class FortiGateClient:
 
     async def ztna_tags(self) -> dict[str, Any]:
         """EMS/ZTNA tag groups synced from FortiClient EMS."""
-        return await self._get("/api/v2/cmdb/firewall/ztna-tag-groups")
+        return await self._get_first_available(
+            [
+                "/api/v2/cmdb/firewall/ztna-ems-tag",
+                "/api/v2/cmdb/firewall/ztna-tag-groups",
+            ]
+        )
 
     async def ztna_traffic_forward_servers(self) -> dict[str, Any]:
         return await self._get("/api/v2/cmdb/firewall/ztna-traffic-forward-proxy")
